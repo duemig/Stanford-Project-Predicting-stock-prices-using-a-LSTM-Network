@@ -1,2 +1,12 @@
-# Predicting stock prices with LSTM Networks
-In this repo we explore a method of predicting stock price movements. We apply a long short term memory (LSTM) based recurrent neural network (RNN) to predict whether the S&P 500 will increase (up) or decrease (down) over the next trading month using the features volatility, return and trading volume as three sets of time sequence data. We use accuracy and the area under the (ROC) curve (AUC) as the metric to tune hyper-parameters and to measure the performance of our prediction. It turns out that the LSTM models perform much like the corresponding baseline linear classification models.
+# Stanford Project: Predicting stock prices using a LSTM-Network
+
+Introduction:
+Artificial Intelligence is changing virtually every aspect of our lives. Today’s algorithms accomplish tasks that until recently only expert humans could perform. As it relates to finance, this is an exciting time to adopt a disruptive technology that will transform how investment decisions are made on a broad scale.
+Models that explain the returns of individual stocks generally use company and stock characteristics, e.g., the market prices of financial instruments and companies’ accounting data. These characteristics can also be used to predict expected stock returns out-of-sample. Most studies use simple linear models to form these predictions. An increasing body of academic literature documents that more sophisticated tools from the Machine Learning (ML) and Deep Learning (DL) repertoire, which allow for nonlinear predictor interactions, can improve the stock return forecasts. 
+The main goal of this project is to investigate whether modern DL techniques can be utilized to more efficiently predict the movements of the stock market. Specifically, we train LSTM-networks with time series price-volume data and compare their out-of-sample return predictability with the performance of simple logistic regressions (our baseline models).
+
+Methods: 
+Long short-term memory (LSTM) recurrent neural network
+
+Programming language: 
+Python
