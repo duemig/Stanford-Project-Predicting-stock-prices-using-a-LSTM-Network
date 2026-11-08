@@ -1,0 +1,23 @@
+model,feature_set,description,threshold,annual_return,annual_volatility,sharpe,max_drawdown,invested_fraction
+buy_and_hold,0,Buy and hold,,0.1279,0.157,0.8488,-0.2477,1.0
+elastic_net,1,Volatility,0.52,0.1278,0.157,0.848,-0.2477,1.0
+gradient_boosting,1,Volatility,0.34,0.1147,0.1535,0.7873,-0.2477,0.9434
+lstm,1,Volatility,0.61,0.0389,0.1237,0.3707,-0.2326,0.5849
+elastic_net,2,Return,0.37,0.1278,0.157,0.848,-0.2477,1.0
+gradient_boosting,2,Return,0.5,0.0866,0.1383,0.672,-0.2024,0.7358
+lstm,2,Return,0.3,0.1278,0.157,0.848,-0.2477,1.0
+elastic_net,3,Volume,0.42,0.0786,0.1458,0.5936,-0.2477,0.8679
+gradient_boosting,3,Volume,0.3,0.1429,0.1472,0.9853,-0.1768,0.934
+lstm,3,Volume,0.58,0.1474,0.1486,1.0042,-0.2249,0.9528
+elastic_net,4,Volatility + Return,0.36,0.1278,0.157,0.848,-0.2477,1.0
+gradient_boosting,4,Volatility + Return,0.35,0.1252,0.1473,0.8777,-0.2004,0.8774
+lstm,4,Volatility + Return,0.58,0.1067,0.1513,0.7484,-0.2249,0.934
+elastic_net,5,Volatility + Volume,0.41,0.1278,0.157,0.848,-0.2477,1.0
+gradient_boosting,5,Volatility + Volume,0.36,0.1099,0.1354,0.8402,-0.2752,0.8302
+lstm,5,Volatility + Volume,0.59,0.1291,0.1392,0.9458,-0.2249,0.8868
+elastic_net,6,Return + Volume,0.45,0.0812,0.1452,0.6123,-0.2375,0.934
+gradient_boosting,6,Return + Volume,0.43,0.1394,0.1488,0.9558,-0.2004,0.8113
+lstm,6,Return + Volume,0.3,0.1278,0.157,0.848,-0.2477,1.0
+elastic_net,7,Volatility + Return + Volume,0.3,0.1278,0.157,0.848,-0.2477,1.0
+gradient_boosting,7,Volatility + Return + Volume,0.63,0.111,0.1386,0.8309,-0.2004,0.6321
+lstm,7,Volatility + Return + Volume,0.3,0.1278,0.157,0.848,-0.2477,1.0

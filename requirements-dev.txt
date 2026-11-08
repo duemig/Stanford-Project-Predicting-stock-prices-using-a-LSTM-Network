@@ -1,0 +1,9 @@
+# Lean requirements for linting and the test suite. The tests use small
+# synthetic data and never import TensorFlow or reach the network, so this set
+# omits tensorflow, yfinance and the plotting stack. Continuous integration
+# installs from this file.
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.4
+pytest>=8.0
+ruff>=0.5

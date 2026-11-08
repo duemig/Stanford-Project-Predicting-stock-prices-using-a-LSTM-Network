@@ -1,0 +1,71 @@
+feature_set,description,seed,test_accuracy,test_auc
+1,Volatility,0,0.6792,0.4633
+1,Volatility,1,0.6887,0.4529
+1,Volatility,2,0.6887,0.4919
+1,Volatility,3,0.6792,0.506
+1,Volatility,4,0.6792,0.4981
+1,Volatility,5,0.6792,0.4873
+1,Volatility,6,0.6792,0.5106
+1,Volatility,7,0.6887,0.4902
+1,Volatility,8,0.6792,0.4932
+1,Volatility,9,0.6698,0.4803
+2,Return,0,0.6887,0.5044
+2,Return,1,0.6887,0.5131
+2,Return,2,0.6887,0.5791
+2,Return,3,0.6887,0.5629
+2,Return,4,0.6887,0.5106
+2,Return,5,0.6887,0.5293
+2,Return,6,0.6887,0.5372
+2,Return,7,0.6887,0.5517
+2,Return,8,0.6887,0.5749
+2,Return,9,0.6887,0.5218
+3,Volume,0,0.6981,0.4467
+3,Volume,1,0.6887,0.4164
+3,Volume,2,0.6887,0.4417
+3,Volume,3,0.6887,0.4853
+3,Volume,4,0.6887,0.4222
+3,Volume,5,0.6887,0.5334
+3,Volume,6,0.6887,0.4641
+3,Volume,7,0.6887,0.5708
+3,Volume,8,0.6981,0.4321
+3,Volume,9,0.6887,0.4122
+4,Volatility + Return,0,0.6792,0.5085
+4,Volatility + Return,1,0.6887,0.5122
+4,Volatility + Return,2,0.6887,0.5679
+4,Volatility + Return,3,0.6887,0.5795
+4,Volatility + Return,4,0.6792,0.5031
+4,Volatility + Return,5,0.6981,0.5255
+4,Volatility + Return,6,0.6792,0.5567
+4,Volatility + Return,7,0.6887,0.5131
+4,Volatility + Return,8,0.6792,0.4695
+4,Volatility + Return,9,0.6887,0.5355
+5,Volatility + Volume,0,0.6792,0.4197
+5,Volatility + Volume,1,0.6887,0.428
+5,Volatility + Volume,2,0.6887,0.4209
+5,Volatility + Volume,3,0.6792,0.467
+5,Volatility + Volume,4,0.6887,0.457
+5,Volatility + Volume,5,0.6887,0.4234
+5,Volatility + Volume,6,0.6792,0.4006
+5,Volatility + Volume,7,0.6887,0.5143
+5,Volatility + Volume,8,0.6887,0.4948
+5,Volatility + Volume,9,0.6887,0.4525
+6,Return + Volume,0,0.6887,0.4139
+6,Return + Volume,1,0.6887,0.418
+6,Return + Volume,2,0.6887,0.4662
+6,Return + Volume,3,0.6887,0.4936
+6,Return + Volume,4,0.6887,0.4458
+6,Return + Volume,5,0.6887,0.4525
+6,Return + Volume,6,0.6887,0.4824
+6,Return + Volume,7,0.6887,0.5558
+6,Return + Volume,8,0.6887,0.5392
+6,Return + Volume,9,0.6887,0.4965
+7,Volatility + Return + Volume,0,0.6792,0.5193
+7,Volatility + Return + Volume,1,0.6887,0.5135
+7,Volatility + Return + Volume,2,0.6887,0.5832
+7,Volatility + Return + Volume,3,0.6887,0.5176
+7,Volatility + Return + Volume,4,0.6887,0.4575
+7,Volatility + Return + Volume,5,0.6887,0.5812
+7,Volatility + Return + Volume,6,0.6792,0.5201
+7,Volatility + Return + Volume,7,0.6887,0.4801
+7,Volatility + Return + Volume,8,0.6792,0.5139
+7,Volatility + Return + Volume,9,0.6887,0.5268

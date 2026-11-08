@@ -1,0 +1,43 @@
+{
+  "download": {
+    "ticker": "^GSPC",
+    "source": "yahoo",
+    "download_date": "2026-11-08",
+    "start": "1980-01-02",
+    "end": "2025-12-31",
+    "rows": 11595
+  },
+  "sample": {
+    "months_total": 551,
+    "months_used": 532,
+    "dev_months": 426,
+    "test_months": 106,
+    "dev_start": "1981-08-31",
+    "dev_end": "2017-01-31",
+    "test_start": "2017-02-28",
+    "test_end": "2025-11-28",
+    "dev_up_rate": 0.6197,
+    "test_up_rate": 0.6887
+  },
+  "config": {
+    "seeds": 10,
+    "n_splits": 5,
+    "embargo": 1,
+    "cost": 0.001,
+    "block": 12,
+    "n_boot": 2000,
+    "lookback": 60
+  },
+  "headline": {
+    "always_up_accuracy": 0.6887,
+    "max_test_auc": 0.6247,
+    "min_test_auc": 0.4384,
+    "max_test_accuracy": 0.6887,
+    "any_auc_ci_above_half": true,
+    "any_beats_always_up": false,
+    "buy_and_hold_sharpe": 0.8488,
+    "buy_and_hold_annual_return": 0.1279,
+    "best_strategy": "lstm (set 3)",
+    "best_strategy_sharpe": 1.0042
+  }
+}

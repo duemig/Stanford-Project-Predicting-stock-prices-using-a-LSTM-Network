@@ -1,0 +1,29 @@
+# Virtual environment
+.venv/
+
+# Price data is not committed; see README for how to fetch it
+data/
+
+# Generated LaTeX fragments and build artefacts. The committed report is the
+# report.pdf at the repository root; report/report.pdf is a build copy.
+report/generated/
+report/report.pdf
+report/*.aux
+report/*.log
+report/*.out
+report/*.fls
+report/*.fdb_latexmk
+report/*.toc
+report/*.bbl
+report/*.blg
+report/*.synctex.gz
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store

@@ -1,0 +1,22 @@
+[project]
+name = "sp500-monthly-direction"
+version = "1.0.0"
+description = "Predicting the monthly direction of the S&P 500 with LSTM networks and linear baselines."
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4", "NPY", "PD"]
+ignore = [
+    "E741",  # ambiguous variable names are fine in short math expressions
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B018"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

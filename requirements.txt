@@ -1,13 +1,21 @@
-# Packages imported by "Final Project.ipynb" (run in early 2019 with Python 3,
-# Keras on TensorFlow 1.x). Versions were not recorded.
-# fix_yahoo_finance is discontinued; use yfinance for the data download instead.
-numpy
-pandas
-scipy
-scikit-learn
-matplotlib
-seaborn
-pandas-datareader
-fix_yahoo_finance
-tensorflow
-keras
+# Runtime requirements for the study. Python 3.11 or newer.
+# Install with: pip install -r requirements.txt
+#
+# Keras 3 ships with TensorFlow 2.16 and later, so no separate keras package is
+# needed. The data download uses yfinance (fix_yahoo_finance is discontinued).
+numpy>=1.26
+pandas>=2.2
+scipy>=1.11
+scikit-learn>=1.4
+matplotlib>=3.8
+tensorflow>=2.16
+yfinance>=0.2.54
+
+# Running the notebook (interactively or top to bottom).
+jupyterlab>=4.0
+nbconvert>=7.0
+ipykernel>=6.0
+
+# Development (linting and tests); also available in requirements-dev.txt.
+pytest>=8.0
+ruff>=0.5
