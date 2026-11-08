@@ -1,0 +1,13 @@
+# Packages imported by "Final Project.ipynb" (run in early 2019 with Python 3,
+# Keras on TensorFlow 1.x). Versions were not recorded.
+# fix_yahoo_finance is discontinued; use yfinance for the data download instead.
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+seaborn
+pandas-datareader
+fix_yahoo_finance
+tensorflow
+keras
