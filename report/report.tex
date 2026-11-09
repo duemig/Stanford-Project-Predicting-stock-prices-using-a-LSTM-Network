@@ -16,6 +16,7 @@
 \captionsetup{font=small,labelfont=bf}
 \titleformat{\section}{\normalfont\large\bfseries}{\thesection}{0.7em}{}
 \titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection}{0.6em}{}
 \titlespacing*{\section}{0pt}{1.1em}{0.4em}
 \titlespacing*{\subsection}{0pt}{0.8em}{0.3em}
 
@@ -36,245 +37,264 @@
 \end{center}
 
 \begin{abstract}
-We ask whether a long short term memory (LSTM) network can predict the direction
-of the S\&P 500 over the next month from past returns, volatility and trading
-volume, and whether it does so any better than a regularised logistic
-regression. We use one non-overlapping observation per month, build stationary
-features, and validate with purged walk-forward cross-validation so that no
-future information leaks into the past. On a held-out test set of \nTest{} months
-the LSTM, the linear baseline and a gradient-boosting model all score close to
-the naive rule of always predicting ``up''. Test AUCs lie between \minAUC{} and
-\maxAUC{}, and no model beats the base rate by a margin that survives a
-block-bootstrap confidence interval. A probability threshold trained only on
-validation data does not produce a timing strategy that beats buying and holding
-after costs. Monthly index direction remains very hard to predict from price and
-volume alone.
+In this project we explore a method of predicting stock price movements. We apply
+a long short term memory (LSTM) based recurrent neural network (RNN) to predict
+whether the S\&P 500 will increase (up) or decrease (down) over the next trading
+month, using the features volatility, return and trading volume as three sets of
+time sequence data. We use accuracy and the area under the ROC curve (AUC) to tune
+hyper-parameters and to measure the performance of our prediction. It turns out
+that the LSTM models perform much like the corresponding baseline linear
+classification models, and that neither beats the naive rule of always predicting
+``up''. Test AUCs lie between \minAUC{} and \maxAUC{}, and a timing strategy built
+on the forecasts does not beat buying and holding after costs.
 \end{abstract}
 
 \section{Introduction}
 
-Artificial intelligence now performs many tasks that once needed an expert. In
-finance this has encouraged a search for models that forecast asset returns.
-Models of individual stock returns usually start from company and market
-characteristics, and most studies form their predictions with simple linear
-models \cite{blitz,lewellen}. A growing literature argues that machine learning
-and deep learning, which allow nonlinear interactions between predictors, can
-improve these forecasts \cite{freyberger,gu,rapach}.
+Artificial Intelligence is changing virtually every aspect of our lives. Today's
+algorithms accomplish tasks that until recently only expert humans could perform.
+As it relates to finance, this is an exciting time to adopt a disruptive
+technology that will transform how investment decisions are made on a broad scale.
 
-This project asks a narrow version of that question. We train LSTM networks on
-time-series price and volume data for the S\&P 500 and compare their
-out-of-sample predictability with that of a regularised logistic regression and
-a gradient-boosting classifier. The task is a monthly up or down call on the
-index. The headline result is negative, and we report it as it comes out: the
-problem is close to unpredictable at this horizon from these inputs.
+Models that explain the returns of individual stocks generally use company and
+stock characteristics, e.g., the market prices of financial instruments and
+companies' accounting data. These characteristics can also be used to predict
+expected stock returns out-of-sample. Most studies use simple linear models to
+form these predictions \cite{blitz,lewellen}. An increasing body of academic
+literature documents that more sophisticated tools from the Machine Learning (ML)
+and Deep Learning (DL) repertoire, which allow for nonlinear predictor
+interactions, can improve the stock return forecasts \cite{freyberger,gu,rapach}.
+
+The main goal of this project is to investigate whether modern DL techniques can be
+utilized to more efficiently predict the movements of the stock market.
+Specifically, we train LSTM networks with time series price-volume data and compare
+their out-of-sample return predictability with the performance of simple logistic
+regressions, our baseline models.
 
 \section{Related work}
 
-Successful financial models are usually proprietary, so published work with
-state-of-the-art performance on this exact task is scarce. The academic
-community has nonetheless taken up deep learning in finance, and the LSTM is a
-common choice for sequence data. Gao applied an LSTM to forecast six US
-industries from 359 features \cite{gao}. Nelson et al predicted short-horizon
-direction from technical features \cite{nelson}, and Chen et al used an LSTM on
-historical prices to classify daily moves \cite{chen}. Lopez de Prado documents
-why ordinary cross-validation leaks in finance and proposes purging and an
-embargo, which we adopt \cite{deprado}. Our features are standard momentum,
-volatility and liquidity signals.
+The financial industry has been slow to integrate DL techniques into their
+systems. Moreover, successful financial models are usually proprietary, and it is
+therefore difficult to find compelling literature with state-of-the-art
+performance on our specific task. However, the academic community has started to
+acknowledge the advances in Financial Machine Learning. Consequently, there are
+increasingly more papers that attempt to apply DL methods to tackle the immensely
+complex problem of stock market prediction. One common theme amongst these works
+is the choice of an LSTM based recurrent neural network. For example, Gao applied
+an LSTM network to forecast the stock markets in six different industries in the
+US, using 359 stock features as input \cite{gao}. Nelson et al generated 175
+features for each 15 minutes of stock data using an LSTM network to predict whether
+the stock price will go up or down \cite{nelson}. A third study by Chen et al uses
+historical stock price data to predict whether a stock price will rise, fall or
+remain in a day, using an LSTM architecture as well \cite{chen}.
+
+Inspired by the above papers, this project also proposes a model based on an LSTM
+architecture to predict price movements using dominant predictive signals that
+include variations on momentum, volatility and liquidity as input. These input
+features have been shown to have widespread predictive power.
 
 \section{Dataset and Features}
 
 \subsection{Raw Data}
 
-The data are daily quotes for the S\&P 500 price index (Yahoo ticker
-\texttt{\^{}GSPC}) from \dataStart{} to \dataEnd{}, downloaded with
-\texttt{yfinance}. Each row has the open, high, low, close and volume. We use the
-close and the volume. The raw series has about \nRawRows{} trading days.
-Re-downloading later may give marginally different values, which does not change
-the conclusions.
+The dataset provides daily quotes for the S\&P 500 going back to 1980 and is
+downloaded with \texttt{yfinance} (the older Yahoo Finance reader is discontinued),
+covering \dataStart{} to \dataEnd{}. It comes with the open, high, low, close and
+volume for each day. In total the raw dataset consists of approximately
+\nRawRows{} rows.
 
 \subsection{Features}
 
-All features are stationary, which matters because the model must generalise
-across four decades in which the index level and the traded volume both grew by
-large factors. From the daily close we form log returns,
+The feature set includes rolling (i) logarithmic returns, (ii) volatilities and
+(iii) trading volumes for the past $i$ trading week(s). All three are stationary,
+which matters because the index level and the traded volume both grow by large
+factors over four decades.
+
+First, daily logarithmic returns can be computed as shown below:
 \begin{equation}
   r_t = \ln\!\left(\frac{P_t}{P_{t-1}}\right).
 \end{equation}
-For each look-back window of $w$ weeks (five trading days per week), with $w$ in
-$\{1,2,3,4,8,12,\dots,80\}$, we compute three month-end features: the summed log
-return over the window, the standard deviation of daily returns over the window,
-and a detrended log volume. The first two are stationary by construction. For
-volume we subtract a trailing one-year mean of log volume from the window mean of
-log volume,
-\begin{equation}
-  \text{volume}_{w,t} = \overline{\ln V}_{\,t,\,5w} - \overline{\ln V}_{\,t,\,252},
-\end{equation}
-which removes the strong secular growth in turnover. This gives 23 windows for
-each of the three families and \nFeatures{} month-end features in total. The
-three families, volatility, return and volume, are combined into the seven models
-of the original project (each family alone, each pair, and all three).
+Since logarithmic returns are additive over time, we can simply sum over the
+corresponding number of daily returns to compute the rolling logarithmic returns
+for each of the past $i$ trading weeks. This gives us 23 features.
 
-The LSTM does not see these aggregates. It receives the most recent \lookback{}
-trading days of the daily channels that correspond to the chosen families: the
-daily log return, a rolling daily volatility, and the detrended daily log volume.
-This lets the network read a real sequence rather than a single snapshot.
+Next, rolling volatilities for each of the past $i$ trading weeks can be calculated
+as the standard deviation of the daily returns over the window:
+\begin{equation}
+  \sigma_{i,t} = \operatorname{sd}\big(r_{t-5i+1}, \dots, r_t\big).
+\end{equation}
+This provides us with additional 23 features.
+
+Lastly, instead of the raw rolling average volume, which trends strongly over the
+sample, we use log volume relative to its trailing one-year mean,
+\begin{equation}
+  \text{volume}_{i,t} = \overline{\ln V}_{\,t,\,5i} - \overline{\ln V}_{\,t,\,252},
+\end{equation}
+which is stationary and adds another 23 features. This results in a total of
+\nFeatures{} features. The baselines use these month-end features; the LSTM instead
+reads the most recent \lookback{} trading days of the corresponding daily series.
 
 \subsection{Scaling}
 
-Features are rescaled before training so that the optimiser sees comparable
-magnitudes and the penalty treats coefficients evenly. We use standardisation,
-which centres each feature and scales it to unit variance,
+In the next step, all features are rescaled before training in order to (i) make
+the contours of the cost function more symmetrical in shape and thus easier to
+optimize, (ii) make training less sensitive to the scale of features and (iii)
+ensure regularization does not behave differently for different scaling.
+Normalization and Standardization are two well-known methods for rescaling data. We
+try both and keep the one that works best for our application, which is
+standardization. The scaler is fitted inside each cross-validation fold on the
+training part only, so no scaling information leaks forward.
+
+\subsubsection{Standardization}
+
+Standardization rescales the data to have a mean ($\mu$) of 0 and a standard
+deviation ($\sigma$) of 1 (unit variance):
 \begin{equation}
   X^{(i)}_z = \frac{X^{(i)} - \bar X}{s_X}.
 \end{equation}
-The scaler is fitted inside each cross-validation fold on the training part only,
-never on the validation or test months, so no scaling information leaks forward.
-The LSTM channels are standardised the same way, using statistics from the
-training sequences only.
+
+\subsubsection{Normalization}
+
+On the other hand, Normalization scales all numeric variables in the range $[0,1]$:
+\begin{equation}
+  X^{(i)}_{norm} = \frac{X^{(i)} - X_{min}}{X_{max} - X_{min}}.
+\end{equation}
 
 \subsection{Separating Test Data}
 
-Ordinary k-fold cross-validation fails in finance because it mixes future and
-past \cite{deprado}. We instead hold out the last \testFrac{} of the months as a
-test set, used once after everything is fixed, and tune on the earlier months
-with walk-forward cross-validation. Because each label looks one month ahead, a
-training month whose label window reaches a validation month is purged, and a
-further embargo of \embargo{} month is dropped before each validation block.
-Figure~\ref{fig:walkforward} shows the scheme.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.92\textwidth]{walk_forward.png}
-  \caption{Purged walk-forward cross-validation on the development months. Each
-  fold trains on an expanding block of past months, skips a purge and embargo
-  gap, and validates on the next block. The final months are held out as the
-  test set.}
-  \label{fig:walkforward}
-\end{figure}
+Since K-Fold Cross Validation fails in finance \cite{deprado}, we instead use
+walk-forward cross-validation for our model development (hyper-parameter tuning).
+Furthermore, to provide an unbiased evaluation of our final model, we withhold the
+last \testFrac{} of our data as a separate test set. This set is only used once our
+model is completely trained. Because each label looks one month ahead, a training
+month whose label window reaches a validation month is purged, and a further
+embargo of \embargo{} month is dropped before each validation block, so no future
+information leaks into the past.
 
 \subsection{Label Distribution}
 
-Each month is labelled up or down by the sign of the next month's return. Using
-one non-overlapping observation per month removes the heavy overlap of the
-original daily labelling, at the cost of a small sample: \nMonths{} months after
-the feature warm-up, of which \nDev{} are development months and \nTest{} are test
-months. The classes are unbalanced in favour of ``up'': \devUp{} of development
-months and \testUp{} of test months are up. This imbalance is central to reading
-the results, because a model that always predicts ``up'' already scores
-\testUp{} on the test set.
+The labels indicate whether the market had a positive or negative return on a given
+month, using one non-overlapping observation per month so that neighbouring labels
+do not share returns. The classes are unbalanced in favour of ``up'': \devUp{} of
+the development months and \testUp{} of the test months are up. This imbalance is
+central to reading the results, because a model that always predicts ``up'' already
+scores \testUp{} on the test set.
 
 \section{Models}
 
 \subsection{Baseline Models}
 
-Two baselines use the month-end aggregates. The first is a logistic regression
-with an elastic-net penalty, which spans ridge and lasso, trained with the saga
-solver. The penalty strength and the L1 ratio are tuned by the walk-forward
-cross-validation above. The second is a gradient-boosting classifier, tuned over
-its learning rate and tree size on the same folds. We also report the naive
-always-up rule, which is the benchmark every model has to beat.
+To provide linear baselines for reference, simple logistic regressions are
+implemented. As described in Section 3.4, we use walk-forward cross-validation for
+model development and then evaluate the performance on the hold-out test set. As
+part of the optimization, the penalties Ridge, Lasso and Elastic Net, and their
+corresponding hyperparameters, are tuned. It turns out that the standardized data
+is best suited for this task. We also add a gradient-boosting classifier as a
+second, nonlinear baseline, tuned on the same folds, and we report the naive
+always-up rule as the benchmark that every model has to beat.
 
 \subsection{LSTM Networks}
 
-The LSTM reads a sequence of \lookback{} trading days and outputs the probability
-of an up month through a single sigmoid unit (Figure~\ref{fig:network}). An LSTM
-keeps a cell state across time steps and uses forget, input and output gates to
-decide what to keep, add and read out, which lets it learn longer dependencies
-than a plain recurrent network \cite{colah}. Because the sample is small, the
-architecture is kept deliberately small and is not tuned; instead we train it
-with early stopping and average over \nSeeds{} random seeds, reporting the mean
-and the spread.
+Given the recent success of RNNs in the area of sequential data, and taking into
+account the temporal sequence of our data, we apply such an architecture to our
+prediction task. Specifically, we use an LSTM network, which is a special type of
+recurrent neural network that works much better than the standard version for many
+tasks. One of the appeals of LSTMs is the idea that they are able to learn
+long-term dependencies. Our network structure is depicted in the following figure.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.42\textwidth]{network_structure.png}
-  \caption{Network structure. A sequence of daily feature channels feeds one LSTM
-  layer, a dropout layer and a single sigmoid output.}
-  \label{fig:network}
+  \includegraphics[width=0.95\textwidth]{lstm_cell.png}
+  \caption{The LSTM cell and its gate equations. A sequence of daily feature
+  vectors feeds one LSTM layer whose output passes through a single output unit.}
+  \label{fig:lstm}
 \end{figure}
+
+The key to LSTMs is the cell state, the horizontal line that runs through the top
+of the diagram (Figure~\ref{fig:lstm}). With only a few linear interactions, it is
+easy for information to flow through. The LSTM can remove or add information to the
+cell state, carefully controlled by three gates. The first gate decides which
+information is discarded from the cell state; this decision is made by a sigmoid
+layer called the forget gate. The second gate decides which new information will be
+stored in the cell state, through a sigmoid update gate and a tanh layer that
+creates a vector of candidate values. Finally, the output gate decides which part
+of the cell state is read out \cite{colah}.
 
 \subsection{Experiment Design}
 
-For each of the seven feature sets we fit the elastic-net baseline, the
-gradient-boosting baseline and the LSTM. We score each model on the test months
-by accuracy, by the area under the ROC curve (AUC) and by the Brier score, and we
-attach 95\% confidence intervals from a moving-block bootstrap over months, which
-preserves any serial dependence. We also compare each model with the always-up
-rule month by month and report whether the difference is positive after the
-bootstrap. Finally we test a simple timing strategy: hold the index next month
-when the predicted probability of an up month exceeds a threshold chosen on
-validation data only, otherwise hold cash, and charge a transaction cost of
-\cost{} on each change in position.
+As aforementioned, we use walk-forward cross-validation for model development and
+then evaluate on the hold-out test set. Due to the nature of our features, we apply
+an LSTM that reads a \lookback{}-day sequence for each month and outputs the
+probability of an up month through a single sigmoid unit. The network is trained
+with early stopping. Because the sample is small, the architecture is kept small
+and is not tuned; we instead average over \nSeeds{} random seeds and report the
+mean and the spread.
 
 \subsection{Experiment Results}
 
-Table~\ref{tab:classification} summarises the classification results and
-Figure~\ref{fig:auc} plots the test AUCs with their intervals. The picture is
-consistent across models and feature sets. Test AUCs cluster around 0.5, from
-\minAUC{} to \maxAUC{}, and all but one of the intervals contain 0.5. The best
-test accuracy is \maxAcc{}, equal to the always-up rate of \testUp{}; no model
-beats always-up by an accuracy margin whose confidence interval excludes zero. One
-of the twenty-one model and feature-set combinations, the elastic net on all three
-families, has an AUC interval that just clears 0.5. With twenty-one combinations
-this is close to what chance alone produces, and that same model's accuracy does
-not beat always-up.
+We have three sets of time sequence data: (1) volatility, (2) return and (3)
+trading volume. By combining these feature sets, 7 models are created and compared
+with their corresponding baseline model. As mentioned above, we use accuracy and
+AUC as our evaluation metrics, now with 95\% block-bootstrap intervals over months.
+Table~\ref{tab:classification} summarizes the results.
 
 \begin{table}[t]
   \centering
-  \caption{Test-set accuracy and AUC for each model and feature set, with the
-  always-up benchmark. EN is the elastic-net logistic regression and GB the
-  gradient-boosting model. The test set has \nTest{} months with an up rate of
-  \testUp{}.}
+  \small
+  \caption{Summary of model results. The baseline is the elastic-net logistic
+  regression; accuracy cells show development / test accuracy. The test set has
+  \nTest{} months with an up rate of \testUp{}.}
   \label{tab:classification}
   \input{generated/table_classification}
 \end{table}
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.92\textwidth]{auc_by_model.png}
-  \caption{Test AUC by feature set and model, with 95\% block-bootstrap
-  intervals. The dashed line marks 0.5, the no-skill level.}
-  \label{fig:auc}
-\end{figure}
+From a trading perspective we are interested in maximizing accuracy, as this tells
+us how well the model does on both up and down months. However, as described in
+Section 3.5, there is a significant imbalance in the data, so we must take accuracy
+with a grain of salt, and the AUC score is a better guide because it is insensitive
+to class imbalance. All models have a test AUC close to 0.5, from \minAUC{} to
+\maxAUC{}, which is an unsatisfactory result, and the best test accuracy is
+\maxAcc{}, equal to the always-up rate; no model beats always-up by a margin whose
+interval excludes zero. One of the twenty-one model and feature-set combinations,
+the elastic net on all three families, has an AUC interval that just clears 0.5,
+which is close to what chance alone produces across that many combinations. The
+gradient-boosting baseline behaves the same way, with test AUCs between \gbMinAUC{}
+and \gbMaxAUC{}. One possible reason is that our features do not contain enough
+information to predict future returns. Moreover, the input data is very noisy, and
+it is difficult for the classifier to generalize to other periods.
 
-The economic test tells the same story. Table~\ref{tab:strategy} and
-Figure~\ref{fig:equity} compare buying and holding with the best timing strategy
-per model family. Buy-and-hold earns an annual return of \bhReturn{} at a Sharpe
-ratio of \bhSharpe{} over the test period. The best timing strategy reaches a
-Sharpe of \bestSharpe{}, but it is the best of twenty-one model and feature-set
-combinations, and most strategies simply stay invested and recover buy-and-hold.
-An edge of this size is well within what picking the best of many would produce,
-so it is not evidence of genuine timing skill.
+We also test a simple timing strategy: hold the index next month when the predicted
+probability of an up month exceeds a threshold chosen on validation data only,
+otherwise hold cash, after a transaction cost of \cost{}.
+Table~\ref{tab:strategy} compares it with buying and holding. Buy-and-hold earns
+\bhReturn{} a year at a Sharpe ratio of \bhSharpe{}. The best timing strategy
+reaches a Sharpe of \bestSharpe{}, but it is the best of twenty-one combinations
+and most strategies simply stay invested and recover buy-and-hold, so the edge is
+not evidence of real timing skill.
 
 \begin{table}[t]
   \centering
+  \small
   \caption{Annualised test performance, buy-and-hold against the best timing
   strategy per model family, after costs.}
   \label{tab:strategy}
   \input{generated/table_strategy}
 \end{table}
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.92\textwidth]{strategy_equity.png}
-  \caption{Growth of one unit over the test period for buy-and-hold and the best
-  timing strategy, with drawdowns below.}
-  \label{fig:equity}
-\end{figure}
-
 \section{Conclusion and Future Work}
 
-Monthly index direction remains very hard to predict even after cleaning up the
-method. With non-overlapping labels, purged validation, stationary features and a
-sequence model that sees real history, the LSTM, the linear baseline and the
-gradient-boosting model all sit close to the always-up rule, and the timing
-strategy does not beat buying and holding after costs. One honest reading is that
-price and volume do not carry enough information about the next month's direction,
-and that the strong upward drift of the index makes the base rate hard to beat.
-Useful next steps are to add information beyond price and volume, such as
-fundamentals or macro data; to predict a continuous return or a quantile rather
-than a sign; and to study a longer or international sample so that the test set is
-not dominated by a single bull market.
+From this project we can conclude that stock price forecasting remains a difficult
+task, even after simplifying the problem to a binary price trend, cleaning up the
+validation, and applying a sequence model that reads a real history. The LSTM, the
+linear baseline and the gradient-boosting model all sit close to the always-up
+rule, and the timing strategy does not beat buying and holding after costs.
+Nonetheless, this information is useful in guiding future work. We have shown that
+it might need more than price, volume and volatility data to predict future
+returns. Potential future directions include enriching the dataset with
+non-technical features such as fundamentals; changing the objective to a continuous
+return or a quantile rather than a sign; exploring other models such as attention;
+and studying a longer or international sample so that the test set is not dominated
+by a single rising market.
 
 \section*{Acknowledgements}
 

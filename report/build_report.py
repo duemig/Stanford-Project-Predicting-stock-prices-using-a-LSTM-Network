@@ -40,11 +40,12 @@ def _month_year(iso_date: str) -> str:
     return dt.date.fromisoformat(iso_date).strftime("%B %Y")
 
 
-def write_macros(summary: dict) -> None:
+def write_macros(summary: dict, classification: pd.DataFrame) -> None:
     """Write the number macros used in the report prose.
 
     Args:
         summary: The parsed ``results/summary.json``.
+        classification: The classification results table.
     """
     sample = summary["sample"]
     config = summary["config"]
@@ -73,42 +74,49 @@ def write_macros(summary: dict) -> None:
         "bhSharpe": f"{headline['buy_and_hold_sharpe']:.2f}",
         "bestSharpe": f"{headline['best_strategy_sharpe']:.2f}",
     }
+    gradient_boosting_auc = classification.loc[
+        classification["model"] == "gradient_boosting", "test_auc"
+    ]
+    macros["gbMinAUC"] = f"{gradient_boosting_auc.min():.2f}"
+    macros["gbMaxAUC"] = f"{gradient_boosting_auc.max():.2f}"
     lines = [f"\\newcommand{{\\{name}}}{{{value}}}" for name, value in macros.items()]
     (GENERATED_DIR / "macros.tex").write_text("\n".join(lines) + "\n")
 
 
 def write_classification_table(classification: pd.DataFrame) -> None:
-    """Write the test accuracy and AUC table.
+    """Write the summary table in the original dev/test accuracy and AUC format.
 
     Args:
         classification: The classification results table.
     """
-    models = classification[classification["model"].isin(FAMILIES)]
-    rows = []
-    for set_id in sorted(models["feature_set"].unique()):
-        block = models[models["feature_set"] == set_id].set_index("model")
-        description = block["description"].iloc[0]
-        accuracies = " & ".join(f"{block.loc[m, 'test_accuracy']:.2f}" for m in FAMILIES)
-        aucs = " & ".join(f"{block.loc[m, 'test_auc']:.2f}" for m in FAMILIES)
-        rows.append(f"{set_id} & {description} & {accuracies} & {aucs} \\\\")
 
-    always_up = classification[classification["model"] == "always_up"].iloc[0]
-    always_row = (
-        "\\multicolumn{2}{l}{Always up} & "
-        f"\\multicolumn{{3}}{{c}}{{{always_up['test_accuracy']:.2f}}} & "
-        f"\\multicolumn{{3}}{{c}}{{{always_up['test_auc']:.2f}}} \\\\"
+    def accuracy_cell(row: pd.Series) -> str:
+        return f"{100 * row['dev_accuracy']:.1f}\\% / {100 * row['test_accuracy']:.1f}\\%"
+
+    rows = []
+    feature_sets = sorted(
+        classification.loc[classification["model"] == "lstm", "feature_set"].unique()
     )
+    for set_id in feature_sets:
+        lstm = classification[
+            (classification["model"] == "lstm") & (classification["feature_set"] == set_id)
+        ].iloc[0]
+        baseline = classification[
+            (classification["model"] == "elastic_net") & (classification["feature_set"] == set_id)
+        ].iloc[0]
+        rows.append(
+            f"{set_id} & {lstm['description']} & {accuracy_cell(lstm)} & "
+            f"{accuracy_cell(baseline)} & {lstm['test_auc']:.2f} & {baseline['test_auc']:.2f} \\\\"
+        )
 
     table = [
-        "\\begin{tabular}{clcccccc}",
+        "\\begin{tabular}{clcccc}",
         "\\toprule",
-        " & & \\multicolumn{3}{c}{Test accuracy} & \\multicolumn{3}{c}{Test AUC} \\\\",
-        "\\cmidrule(lr){3-5}\\cmidrule(lr){6-8}",
-        "Set & Features & EN & GB & LSTM & EN & GB & LSTM \\\\",
+        " & & \\multicolumn{2}{c}{Dev / Test accuracy} & \\multicolumn{2}{c}{Test AUC} \\\\",
+        "\\cmidrule(lr){3-4}\\cmidrule(lr){5-6}",
+        "Model & Features & LSTM & Baseline & LSTM & Baseline \\\\",
         "\\midrule",
         *rows,
-        "\\midrule",
-        always_row,
         "\\bottomrule",
         "\\end{tabular}",
     ]
@@ -183,7 +191,7 @@ def main() -> None:
     classification = pd.read_csv(RESULTS_DIR / "classification.csv")
     strategy = pd.read_csv(RESULTS_DIR / "strategy.csv")
 
-    write_macros(summary)
+    write_macros(summary, classification)
     write_classification_table(classification)
     write_strategy_table(strategy)
     destination = compile_report()

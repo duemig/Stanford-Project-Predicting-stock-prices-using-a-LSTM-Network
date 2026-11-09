@@ -45,43 +45,6 @@ def _prepare() -> None:
     FIGURES_DIR.mkdir(exist_ok=True)
 
 
-def plot_network_structure(path: Path) -> Path:
-    """Draw the LSTM network structure used in the study.
-
-    Args:
-        path: Output PNG path.
-
-    Returns:
-        The written path.
-    """
-    layers = [
-        "Input\n60 days x channels",
-        "LSTM layer",
-        "Dropout",
-        "Dense (1 unit)\nsigmoid",
-        "P(up next month)",
-    ]
-    fig, ax = plt.subplots(figsize=(4.2, 6.0))
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, len(layers))
-    for i, label in enumerate(layers):
-        y = len(layers) - 1 - i
-        ax.add_patch(
-            plt.Rectangle((0.15, y + 0.2), 0.7, 0.6, facecolor="#eaf2fb", edgecolor="#1f77b4")
-        )
-        ax.text(0.5, y + 0.5, label, ha="center", va="center")
-        if i < len(layers) - 1:
-            ax.annotate(
-                "", xy=(0.5, y + 0.2), xytext=(0.5, y - 0.2 + 1),
-                arrowprops={"arrowstyle": "->", "color": "#555"},
-            )
-    ax.axis("off")
-    fig.tight_layout()
-    fig.savefig(path)
-    plt.close(fig)
-    return path
-
-
 def plot_walk_forward(path: Path, split: Split) -> Path:
     """Illustrate the purged walk-forward folds and the held-out test block.
 
@@ -115,11 +78,12 @@ def plot_walk_forward(path: Path, split: Split) -> Path:
     ]
     ax.legend(
         handles, ["Train", "Purge + embargo", "Validation", "Held-out test"],
-        loc="upper left", frameon=False, fontsize=9,
+        loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=4,
+        frameon=False, fontsize=9,
     )
     ax.grid(False)
     fig.tight_layout()
-    fig.savefig(path)
+    fig.savefig(path, bbox_inches="tight")
     plt.close(fig)
     return path
 
@@ -264,7 +228,6 @@ def make_all_figures(
     config = config or StudyConfig()
     split = build_split(prices, config)
     return [
-        plot_network_structure(FIGURES_DIR / "network_structure.png"),
         plot_walk_forward(FIGURES_DIR / "walk_forward.png", split),
         plot_price_history(FIGURES_DIR / "price_history.png", prices, split),
         plot_feature_examples(FIGURES_DIR / "feature_examples.png", prices),
