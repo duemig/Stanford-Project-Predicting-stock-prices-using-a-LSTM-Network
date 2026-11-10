@@ -98,6 +98,10 @@ def bootstrap_metric(
         if need_both_classes and len(np.unique(y_true[index])) < 2:
             continue
         samples.append(float(metric(y_true[index], proba[index])))
+    if not samples:
+        raise ValueError(
+            "Bootstrap drew no usable resamples; the series may be effectively single-class."
+        )
     low, high = np.percentile(samples, [2.5, 97.5])
     return Interval(point, float(low), float(high))
 
@@ -152,6 +156,11 @@ def _strategy_returns(
 
     Returns:
         Net monthly returns.
+
+    Note:
+        The position starts from cash, so entering the market in the first month is
+        charged the cost. This is deliberately conservative: buy-and-hold pays no
+        such cost, so the comparison cannot flatter the timing strategy.
     """
     previous = np.concatenate([[0.0], position[:-1]])
     turnover = np.abs(position - previous)

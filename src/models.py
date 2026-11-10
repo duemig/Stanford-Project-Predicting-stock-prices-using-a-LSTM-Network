@@ -278,8 +278,10 @@ def train_lstm(
     Returns:
         An `LSTMResult` with per-seed and averaged outputs.
     """
+    import tensorflow as tf
     from tensorflow import keras
 
+    tf.config.experimental.enable_op_determinism()
     config = config or LSTMConfig()
     n_val = max(1, int(round(config.val_fraction * len(X_dev))))
     split = len(X_dev) - n_val

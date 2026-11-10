@@ -27,7 +27,9 @@ files in [results/](results), which are produced by `run_study.py`.
 - **Validation.** The last 20% of months are held out as a test set, used once.
   The rest is tuned with purged walk-forward cross-validation: a training month
   whose label reaches a validation month is purged, and a one-month embargo is
-  dropped before each validation block. All scaling is fitted inside each fold.
+  dropped before each validation block. The baselines fit their scaler inside each
+  fold; the LSTM standardizes its inputs on the training part of its inner split,
+  so no scaling ever sees the data it is evaluated on.
 - **Models.** Always-up (the benchmark), an elastic-net logistic regression and a
   gradient-boosting classifier on the aggregates, and an LSTM on the daily
   sequences trained with early stopping over 10 seeds.

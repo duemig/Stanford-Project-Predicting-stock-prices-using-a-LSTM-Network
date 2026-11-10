@@ -75,6 +75,12 @@ def daily_channels(prices: pd.DataFrame) -> pd.DataFrame:
         return), ``vol20`` (rolling return volatility) and ``logvol_rel`` (log
         volume minus its trailing one-year mean). Leading rows are ``NaN`` until
         each rolling window is full.
+
+    Note:
+        These are the daily series the LSTM reads: the daily analogues of the
+        month-end aggregates in `window_aggregates`, not the aggregates themselves.
+        In particular ``logvol_rel`` is the instantaneous detrended log volume,
+        not a window mean.
     """
     close = prices["Close"]
     ret = np.log(close / close.shift(1))

@@ -5,11 +5,11 @@
 # needed. The data download uses yfinance (fix_yahoo_finance is discontinued).
 numpy>=1.26
 pandas>=2.2
-scipy>=1.11
 scikit-learn>=1.4
 matplotlib>=3.8
 tensorflow>=2.16
 yfinance>=0.2.54
+requests>=2.31
 
 # Running the notebook (interactively or top to bottom).
 jupyterlab>=4.0

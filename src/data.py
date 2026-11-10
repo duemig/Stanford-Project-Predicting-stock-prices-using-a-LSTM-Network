@@ -137,12 +137,21 @@ def get_prices(
         A tuple ``(prices, info)`` where prices is indexed by date with OHLCV
         columns and info records the source, download date and coverage.
     """
+    resolved_end = end or default_end()
     if PRICE_PATH.exists() and not force:
         prices = pd.read_csv(PRICE_PATH, parse_dates=["Date"]).set_index("Date")
-        info = json.loads(INFO_PATH.read_text()) if INFO_PATH.exists() else {}
-        return prices, info
+        # A few days of slack absorbs weekends and holidays at the range edges (for
+        # example a 1 January start first trades on the 2nd), while a genuinely
+        # shorter cache still triggers a re-download.
+        tolerance = pd.Timedelta(days=7)
+        covers_request = prices.index.min() <= pd.Timestamp(start) + tolerance and (
+            prices.index.max() >= pd.Timestamp(resolved_end) - tolerance
+        )
+        if covers_request:
+            info = json.loads(INFO_PATH.read_text()) if INFO_PATH.exists() else {}
+            return prices, info
 
-    prices, source = download_prices(start, end or default_end())
+    prices, source = download_prices(start, resolved_end)
     DATA_DIR.mkdir(exist_ok=True)
     prices.to_csv(PRICE_PATH, index_label="Date")
     info = {
